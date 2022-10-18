@@ -2,16 +2,22 @@ pragma solidity >=0.8.0 <0.9.0;
 //SPDX-License-Identifier: MIT
 
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract YourContract {
+contract YourContract is ERC20 {
+    constructor() ERC20("CoolToken", "CTK") {
+        _mint(_msgSender(), 10000 * (10**uint256(decimals())));
+    }
+
     mapping(address => uint256) balance;
-    address addr = msg.sender;
 
     //<!--MAPPING TASK-->
     // This function accepts one argument and it saves the amount a user is depositing into a mapping
-    function deposit(uint256 amount) public {
-        balance[addr] = amount;
-    }
+
+    // <!--PAYABLE TASK (MODIFIES DEPOSIT FUNCTION)-->
+    address addr = payable(msg.sender);
+
+    function deposit() external payable {}
 
     // This function searches for the user balance inside the balance mapping and returns the balance of whoever is calling the contract
     function checkBalance() public view returns (uint256) {
@@ -59,13 +65,13 @@ contract YourContract {
     // Add a withdraw function and create a modifier that only allows the owner of the contract to withdraw the funds.
     address owner = msg.sender;
 
-    modifier canWithdraw(_owner) {
+    modifier canWithdraw(address _owner) {
         require(owner == _owner, "You are not the owner");
         _;
     }
 
-    function withdraw() public canWithdraw(_owner) {
-        YourContract.transfer(_owner, _amount);
+    function withdraw(uint256 _amount) public canWithdraw(msg.sender) {
+        payable(msg.sender).transfer(_amount);
     }
 
     /* Add an addFund function and create a modifier that only allows users that have 
@@ -80,13 +86,18 @@ contract YourContract {
 
     // Create a modifier that accepts a value(uint256 _amount)
 
-    uint256 constant private fee = 5;
+    uint256 private constant fee = 5;
 
     modifier valueAcceptance(uint256 _amount) {
         require(_amount < fee, "Amount is too small");
-            _;
-        }
-    function addFund(address _addr, uint256 _amount) external onlyAllow(_addr) valueAcceptance(uint256 _amount) {
+        _;
+    }
+
+    function addFund(address _addr, uint256 _amount)
+        external
+        onlyAllow(_addr)
+        valueAcceptance(_amount)
+    {
         forDeposit[_addr]._amount = forDeposit[_addr]._amount + _amount;
     }
 
@@ -96,12 +107,14 @@ contract YourContract {
     The contact should emit the following events when a user 
     deposits and updates their profile information respectively: */
 
-    event FundsDeposited(address user, uin256 amount);
+    event FundsDeposited(address user, uint256 amount);
+
     function emitFundsDeposited(address _user, uint256 _amount) external {
         emit FundsDeposited(_user, _amount);
     }
 
     event ProfileUpdated(address user);
+
     function emitProfileUpdated(address _user) external {
         emit ProfileUpdated(_user);
     }
