@@ -89,4 +89,20 @@ contract YourContract {
     function addFund(address _addr, uint256 _amount) external onlyAllow(_addr) valueAcceptance(uint256 _amount) {
         forDeposit[_addr]._amount = forDeposit[_addr]._amount + _amount;
     }
+
+    // <!--EVENT TASK-->
+
+    /* Extend the previous task to use blockchain events. 
+    The contact should emit the following events when a user 
+    deposits and updates their profile information respectively: */
+
+    event FundsDeposited(address user, uin256 amount);
+    function emitFundsDeposited(address _user, uint256 _amount) external {
+        emit FundsDeposited(_user, _amount);
+    }
+
+    event ProfileUpdated(address user);
+    function emitProfileUpdated(address _user) external {
+        emit ProfileUpdated(_user);
+    }
 }
